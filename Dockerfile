@@ -1,4 +1,4 @@
-FROM nginxinc/nginx-unprivileged:alpine
+FROM nginxinc/nginx-unprivileged:alpine-slim
 
 COPY files/ /usr/share/nginx/html/
 COPY nginx.conf /etc/nginx/conf.d/default.conf
