@@ -2,7 +2,8 @@
    Fords Branch Church of Christ — Main Stylesheet
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lora:ital,wght@0,400;0,500;1,400&family=Raleway:wght@300;400;500;600&display=swap');
+/* Fonts are loaded via <link> tags in each page's <head> (faster than
+   an @import here, which blocks rendering on a second round trip). */
 
 :root {
   --navy:      #1b2d52;

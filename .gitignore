@@ -1,0 +1,12 @@
+# Secrets — the Cloudflare tunnel token lives in .env on the server ONLY.
+# Never commit it. If it ever lands in the repo, rotate the token in the
+# Cloudflare Zero Trust dashboard.
+.env
+*.env
+
+# Local Claude Code settings
+.claude/
+
+# OS cruft
+.DS_Store
+Thumbs.db
