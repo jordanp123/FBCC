@@ -74,8 +74,8 @@ docker build -t fbcc-test . && docker run --rm -p 127.0.0.1:8080:8080 fbcc-test
 
 ## Server / infrastructure notes
 
-- The nginx container runs unprivileged (`nginxinc/nginx-unprivileged`), read-only,
-  with all capabilities dropped and resource limits set.
+- The nginx container runs unprivileged (`nginxinc/nginx-unprivileged:alpine-slim`),
+  read-only, with all capabilities dropped and resource limits set.
 - The webroot is copied read-only: every file is mode `444` and every directory
   `755`. That split matters — a directory needs its execute/traverse bit for the
   non-root runtime user (uid `7001`) to read files inside it, so the Dockerfile
@@ -105,5 +105,10 @@ docker build -t fbcc-test . && docker run --rm -p 127.0.0.1:8080:8080 fbcc-test
   and `style=""`, the policy keeps `'unsafe-inline'`, so it locks down external
   origins rather than inline injection. To go back to observing (e.g. before
   adding a new embed), rename the header to `Content-Security-Policy-Report-Only`.
+- `nginx.conf` also hardens requests beyond the headers/CSP above: only `GET` and
+  `HEAD` are allowed (anything else returns `405`), `server_tokens off` hides the
+  nginx version from responses and error pages, and requests for hidden dotfiles
+  (`/.git`, `/.env`, …) or common script extensions (`.php`, `.asp`, `.aspx`,
+  `.jsp`, `.cgi`, `.sh`, `.py`, `.pl`, `.rb`) are denied with a `404`.
 - The bulletin Google Doc is publicly readable by design — keep that in mind
   before putting personal details (e.g. prayer-request specifics) in it.
