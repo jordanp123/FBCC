@@ -5,9 +5,9 @@ services:
     restart: unless-stopped
     user: 7001:7001
     read_only: true
-#    security_opt:  #Have to disable if using the Ubuntu SNAP package for docker
-#      - no-new-privileges=true
-    cap_drop: #Running Nginx Unprivledged in Dockerfile
+    security_opt:
+      - no-new-privileges=true
+    cap_drop:
       - ALL
     deploy:
       resources:
@@ -34,8 +34,8 @@ services:
           pids: 4096
     cap_drop:
       - ALL
-#    security_opt:
-#        - no-new-privileges=true
+    security_opt:
+        - no-new-privileges=true
     restart: unless-stopped
     command: tunnel run
     environment:
