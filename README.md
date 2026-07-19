@@ -15,7 +15,7 @@ Served by nginx in Docker, published to the internet through a Cloudflare Tunnel
 │       ├── css/style.css   # Single stylesheet for the whole site
 │       └── images/
 ├── nginx.conf              # nginx server config (caching, security headers, clean URLs, custom 404)
-├── Dockerfile              # nginx-unprivileged; copies each site file read-only (444)
+├── Dockerfile              # nginx-unprivileged; copies the webroot read-only (files 444, dirs 755)
 ├── .dockerignore           # allowlist: only files/ and nginx.conf enter the build context
 └── docker-compose.yaml     # website container + cloudflared tunnel container
 ```
@@ -30,10 +30,9 @@ Served by nginx in Docker, published to the internet through a Cloudflare Tunnel
 | **Stylesheet** | Edit `files/assets/css/style.css`, then **bump the version** in every page's `<link ... href="assets/css/style.css?v=2" />` (v=2 → v=3, etc.), then deploy. Without the bump, returning visitors keep the old CSS for up to a day. |
 | **Images** | Add the new image under a **new filename** and update the HTML to point at it. Images are cached by browsers for 1 year, so replacing a file in-place won't show up for returning visitors. |
 
-> **Adding a *new* file** (a page, image, or any asset): also add a matching
-> `COPY` line in the `Dockerfile`. Files are copied individually so each can be
-> mode `444`, which means a file with no `COPY` line simply won't be in the image.
-> Editing an *existing* file needs no Dockerfile change.
+> **Adding a *new* file** (a page, image, or any asset): just drop it under
+> `files/` and deploy — the whole `files/` tree is copied into the image, so no
+> Dockerfile change is needed. Editing an existing file is the same.
 
 The pages share a shell (edit-into-every-page): header/nav, footer, and the small
 nav-toggle script are duplicated in each HTML file. When changing them, change all
@@ -77,6 +76,14 @@ docker build -t fbcc-test . && docker run --rm -p 127.0.0.1:8080:8080 fbcc-test
 
 - The nginx container runs unprivileged (`nginxinc/nginx-unprivileged`), read-only,
   with all capabilities dropped and resource limits set.
+- The webroot is copied read-only: every file is mode `444` and every directory
+  `755`. That split matters — a directory needs its execute/traverse bit for the
+  non-root runtime user (uid `7001`) to read files inside it, so the Dockerfile
+  applies `--chmod=444` to the whole tree and then restores `755` on directories.
+  Leaving directories at `444` strips traversal, and every request under a
+  subdirectory (e.g. `/assets`) returns `403` — an unstyled site with broken
+  images, served with `Content-Type: text/html` (a `nosniff` MIME error in the
+  browser console) because nginx answers with the HTML error page.
 - `no-new-privileges` is commented out in `docker-compose.yaml` because the Ubuntu
   **snap** Docker package can't handle it — re-enable it if Docker is ever
   installed from docker.com or apt instead.
