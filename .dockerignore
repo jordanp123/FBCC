@@ -1,0 +1,10 @@
+# Allowlist build context: ignore everything, then re-include only what the
+# Dockerfile actually COPYs. Keeps .env (tunnel token), .git, .claude, the
+# compose file, and docs out of the build context entirely — smaller/faster
+# builds and no stray secrets handed to the Docker daemon.
+#
+# How it works: `*` excludes every top-level entry; each `!` line un-ignores
+# one. Re-including the `files` directory brings its whole subtree along.
+*
+!files
+!nginx.conf
