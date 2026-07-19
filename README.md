@@ -87,14 +87,16 @@ docker build -t fbcc-test . && docker run --rm -p 127.0.0.1:8080:8080 fbcc-test
   dashboard (Rules → Transform Rules → Modify Response Header) — adds two
   deprecated headers, `Expect-CT` and `X-XSS-Protection`, that are **not** in
   `nginx.conf`.
-- There is deliberately **no _enforced_ Content-Security-Policy**: the Tithe.ly
-  give widget and the Google Docs/Calendar/Maps embeds would need a fragile
-  allowlist, and a mistake would silently break online giving. A
-  `Content-Security-Policy-Report-Only` header **is** set in `nginx.conf` — it
-  observes what a real policy would block (violations appear in the browser
-  DevTools console) without blocking anything. Because every page relies on
-  inline `<script>` and `style=""`, any enforced CSP would still need
-  `'unsafe-inline'`, so it would only lock down external origins, not inline
-  injection. Revisit enforcement after reviewing the Report-Only violations.
+- An **enforced** `Content-Security-Policy` is set in `nginx.conf`. It shipped
+  in `Content-Security-Policy-Report-Only` first, and the footprint was mapped
+  across every page (front / bulletin / give) before enforcing: the only origin
+  the policy would have blocked was the Cloudflare Insights beacon, which is now
+  allowlisted. The Tithe.ly give widget and Google Docs/Calendar/Maps embeds are
+  covered by `frame-src`; the whole Tithe.ly → Stripe → Plaid → hCaptcha →
+  reCAPTCHA payment stack loads *inside* the tithe.ly iframe and answers to
+  Tithe.ly's own CSP, not ours. Because every page relies on inline `<script>`
+  and `style=""`, the policy keeps `'unsafe-inline'`, so it locks down external
+  origins rather than inline injection. To go back to observing (e.g. before
+  adding a new embed), rename the header to `Content-Security-Policy-Report-Only`.
 - The bulletin Google Doc is publicly readable by design — keep that in mind
   before putting personal details (e.g. prayer-request specifics) in it.
